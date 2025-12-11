@@ -8,10 +8,13 @@ import (
 // ====================== Funciones que generan o son hilos ===========================
 
 // cada uno de estos worker gestiona 1 coche en su fase correspondiente
-func worker(g *Garage, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Event, phase int) {
+func worker(g *Garage, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Event, phase int, stop <-chan struct{}) {
 	var c *Car
 	for {
-		c = getCar(entrys)
+		c = getCar(entrys, stop)
+		if c == nil {
+			return
+		}
 		g.updatePhase(c.id, phase)
 
 		genEvent(events, c, "entra")
@@ -32,9 +35,9 @@ func worker(g *Garage, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Ev
 }
 
 // funcion que genera workers para cada fase
-func startPhase(g *Garage, nWorkers int, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Event, phase int) {
+func startPhase(g *Garage, nWorkers int, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Event, phase int, stop <-chan struct{}) {
 	for i := 0; i < nWorkers; i++ {
-		go worker(g, entrys, exits, events, phase)
+		go worker(g, entrys, exits, events, phase, stop)
 	}
 }
 

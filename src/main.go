@@ -27,6 +27,12 @@ func main() {
 	// Canal para events hacia el logger
 	events := make(chan Event)
 
+	// canales para terminar a las goroutines
+	stopDoc := make(chan struct{})
+	stopRep := make(chan struct{})
+	stopClean := make(chan struct{})
+	stopDeliver := make(chan struct{})
+
 	g = newGarage(numSlots)
 	auxcars := genCars(numCars)
 
@@ -39,16 +45,16 @@ func main() {
 	// Lanzar workers de cada fase
 
 	// Fase de documentacion:
-	startPhase(g, numWorkersDoc, docChans, repChans, events, DOCPHASE)
+	startPhase(g, numWorkersDoc, docChans, repChans, events, DOCPHASE, stopDoc)
 
 	// Fase de reparacion
-	startPhase(g, numWorkersRep, repChans, cleanChans, events, REPAIRPHASE)
+	startPhase(g, numWorkersRep, repChans, cleanChans, events, REPAIRPHASE, stopRep)
 
 	// Fase de limpieza
-	startPhase(g, numWorkersClean, cleanChans, deliverChans, events, CLEANPHASE)
+	startPhase(g, numWorkersClean, cleanChans, deliverChans, events, CLEANPHASE, stopClean)
 
 	// Fase de entrega
-	startPhase(g, numWorkersDeliber, deliverChans, noExits, events, DELIVERYPHASE)
+	startPhase(g, numWorkersDeliber, deliverChans, noExits, events, DELIVERYPHASE, stopDeliver)
 
 	// Generación de Cars (productor)
 	for i := 0; i < numCars; i++ {
@@ -69,9 +75,12 @@ func main() {
 
 	// Esperar a que TODOS los Cars terminen la fase de entrega
 	g.wg.Wait()
-
-	// Ahora podemos cerrar el canal de events para que el logger termine
+	freeThreats(stopDoc, stopRep, stopClean, stopDeliver)
+	closeChans(docChans)
+	closeChans(repChans)
+	closeChans(cleanChans)
+	closeChans(deliverChans)
 	close(events)
-
+	close(g.freeSlots)
 	fmt.Println("Simulación completada.")
 }

@@ -16,6 +16,17 @@ func newGarage(numSlots int) *Garage {
 	return g
 }
 
+func freeThreats(docChan, repChan, cleanChan, deliverChan chan struct{}) {
+	docChan <- struct{}{}
+	repChan <- struct{}{}
+	cleanChan <- struct{}{}
+	deliverChan <- struct{}{}
+	close(docChan)
+	close(repChan)
+	close(cleanChan)
+	close(deliverChan)
+}
+
 func getCarFromQ(cars map[int]*Car) *Car {
 	var chosen *Car
 
@@ -89,7 +100,7 @@ func genCar(id int) *Car {
 }
 
 // obtiene un coche a traves de un canal de comunicacion entre hilos, con prioridades
-func getCar(chans [3]chan *Car) *Car {
+func getCar(chans [3]chan *Car, stop <-chan struct{}) *Car {
 	var c *Car
 
 	select {
@@ -102,6 +113,8 @@ func getCar(chans [3]chan *Car) *Car {
 			case c = <-chans[0]:
 			case c = <-chans[1]:
 			case c = <-chans[2]:
+			case <-stop:
+				return nil
 			}
 		}
 	}
@@ -129,6 +142,12 @@ func initPhaseChans() [3]chan *Car {
 		chans[i] = make(chan *Car)
 	}
 	return chans
+}
+
+func closeChans(chans [3]chan *Car) {
+	for i := range chans {
+		close(chans[i])
+	}
 }
 
 // genera un evento que se envía al logger para que este escriba por stdout

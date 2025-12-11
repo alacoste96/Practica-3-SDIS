@@ -1,0 +1,11 @@
+=== RUN   TestEscenario1_A10_B10_C10
+    main_test.go:136: Escenario 1 (A=10, B=10, C=10), 5 simulaciones, tiempo medio: 57.212558471s
+--- PASS: TestEscenario1_A10_B10_C10 (286.06s)
+=== RUN   TestEscenario2_A20_B5_C5
+    main_test.go:152: Escenario 2 (A=20, B=5, C=5), 5 simulaciones, tiempo medio: 1m7.835457295s
+--- PASS: TestEscenario2_A20_B5_C5 (339.18s)
+=== RUN   TestEscenario3_A5_B5_C20
+    main_test.go:168: Escenario 3 (A=5, B=5, C=20), 5 simulaciones, tiempo medio: 44.132708145s
+--- PASS: TestEscenario3_A5_B5_C20 (220.66s)
+PASS
+ok  	practica3/src	845.907s
