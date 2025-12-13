@@ -1,0 +1,180 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.5 Chrome/138.0.7204.251 Electron/37.6.1 Safari/537.36" version="28.2.5">
+  <diagram name="Diagrama de Estados" id="state-diagram">
+    <mxGraphModel dx="1398" dy="829" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Diagrama de Estados: Ciclo de Vida de un Coche" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="334.5" y="30" width="500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="70" y="195" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="state-generado" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="150" y="170" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="state-generado-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Generado&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="160" y="175" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-generado-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="160" y="200" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-generado-activity" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• Asignar ID&lt;br&gt;• Asignar prioridad&lt;br&gt;• Calcular duración&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="170" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow-start" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="start" target="state-generado" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="350" as="sourcePoint" />
+            <mxPoint x="570" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-esperando" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="380" y="170" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="state-esperando-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Esperando Plaza&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="390" y="175" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-esperando-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="390" y="200" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-esperando-activity" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• &amp;lt;-g.freeSlots&lt;br&gt;• Espera FIFO&lt;br&gt;  con prioridad&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="395" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow1" value="Solicita entrada" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="state-generado" target="state-esperando" edge="1">
+          <mxGeometry x="-0.1429" y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="350" as="sourcePoint" />
+            <mxPoint x="570" y="300" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-fase1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="610" y="165" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase1-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Fase 1: Documentación&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="620" y="160" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase1-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="620" y="200" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase1-activity" value="&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• UpdatePhase(1)&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• GenEvent(&quot;entra&quot;)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• Sleep(duration)&lt;/span&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• GenEvent(&quot;sale&quot;)&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="625" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow2" value="Plaza disponible" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" parent="1" source="state-esperando" target="state-fase1" edge="1">
+          <mxGeometry x="-0.1675" y="-12" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="350" as="sourcePoint" />
+            <mxPoint x="570" y="300" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-fase2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="840" y="165" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase2-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Fase 2: Reparación&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="850" y="175" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase2-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="850" y="200" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase2-activity" value="&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• UpdatePhase(2)&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• GenEvent(&quot;entra&quot;)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• Sleep(duration)&lt;/span&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• GenEvent(&quot;sale&quot;)&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="855" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow3" value="Docs OK" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;" parent="1" source="state-fase1" target="state-fase2" edge="1">
+          <mxGeometry x="0.2" y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="350" as="sourcePoint" />
+            <mxPoint x="570" y="300" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-fase3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="840" y="320" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase3-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Fase 3: Limpieza&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="850" y="320" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase3-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="850" y="350" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase3-activity" value="&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• UpdatePhase(3)&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• GenEvent(&quot;entra&quot;)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• Sleep(duration)&lt;/span&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• GenEvent(&quot;sale&quot;)&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="855" y="350" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow4" value="Reparación OK" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="state-fase2" target="state-fase3" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="400" as="sourcePoint" />
+            <mxPoint x="570" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-fase4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="610" y="320" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase4-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Fase 4: Entrega&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="620" y="320" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase4-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="620" y="350" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-fase4-activity" value="&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• UpdatePhase(4)&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• GenEvent(&quot;entra&quot;)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(4, 4, 4); background-color: transparent;&quot;&gt;• Sleep(duration)&lt;/span&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(4, 4, 4);&quot;&gt;• GenEvent(&quot;sale&quot;)&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="625" y="350" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow5" value="Limpieza OK" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="state-fase3" target="state-fase4" edge="1">
+          <mxGeometry x="0.1429" y="10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="450" as="sourcePoint" />
+            <mxPoint x="570" y="400" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="state-completado" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="380" y="320" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="state-completado-name" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Completado&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14" parent="1" vertex="1">
+          <mxGeometry x="390" y="330" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="state-completado-divider" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="390" y="350" width="140" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="state-completado-activity" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• delCar(id)&lt;br&gt;• freeSlots &amp;lt;-&lt;br&gt;• wg.Done()&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="395" y="358" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="arrow6" value="Revisión OK" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="state-fase4" target="state-completado" edge="1">
+          <mxGeometry x="-0.1429" y="10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="500" as="sourcePoint" />
+            <mxPoint x="570" y="450" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="255" y="350" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="end-outer" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="245" y="340" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="note1" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Transiciones respetan&lt;br&gt;prioridad del coche:&lt;br&gt;&lt;br&gt;• Alta (Cat A): 5s/fase&lt;br&gt;• Media (Cat B): 3s/fase&lt;br&gt;• Baja (Cat C): 1s/fase&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f0f8ff;strokeColor=#6c8ebf;size=12;align=left;verticalAlign=top;spacing=5;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="160" y="442.5" width="160" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="note2" value="&lt;font style=&quot;color: rgb(19, 19, 19);&quot;&gt;Las 4 fases son&lt;br&gt;SECUENCIALES para&lt;br&gt;cada coche, pero&lt;br&gt;PARALELAS entre&lt;br&gt;múltiples coches.&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff9e6;strokeColor=#d6b656;size=12;align=left;verticalAlign=top;spacing=5;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="380" y="450" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="note3" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Al completar, se libera&lt;br&gt;una plaza (freeSlots &amp;lt;-)&lt;br&gt;permitiendo que otro&lt;br&gt;coche entre al taller.&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#e6ffe6;strokeColor=#82b366;size=12;align=left;verticalAlign=top;spacing=5;fontSize=10" parent="1" vertex="1">
+          <mxGeometry x="610" y="450" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="840" y="450" width="160" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Leyenda:&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11" parent="1" vertex="1">
+          <mxGeometry x="850" y="465" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-item1" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• Cada estado tiene&lt;br&gt;  actividades internas&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9" parent="1" vertex="1">
+          <mxGeometry x="850" y="485" width="140" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-item2" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• Las transiciones son&lt;br&gt;  automáticas al completar&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9" parent="1" vertex="1">
+          <mxGeometry x="850" y="510" width="140" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-item3" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;• No hay vuelta atrás&lt;br&gt;  (flujo unidireccional)&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9" parent="1" vertex="1">
+          <mxGeometry x="850" y="535" width="140" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="section-title" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;Estados del Ciclo de Vida&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12" parent="1" vertex="1">
+          <mxGeometry x="150" y="110" width="850" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

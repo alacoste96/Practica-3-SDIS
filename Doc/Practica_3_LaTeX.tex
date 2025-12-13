@@ -1,0 +1,737 @@
+\documentclass[12pt,a4paper,oneside]{article}
+\usepackage[utf-8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\geometry{margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Práctica 3: Concurrencia en Go}
+\fancyhead[R]{Sistemas Distribuidos}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\lstset{
+  language=Go,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  frame=single,
+  numberstyle=\tiny,
+  numbers=left,
+  stepnumber=1
+}
+
+\title{
+  \Large\textbf{Documentación Técnica}\\
+  \large Práctica 3: Concurrencia en Go\\
+  \large \textit{El Taller del Pueblo}
+}
+\author{Alexandre Lacoste Rodríguez - Ingeniería Telemática - Sistemas Distribuidos}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Este documento presenta la documentación técnica del sistema de simulación de un taller de reparación de coches desarrollado en Go, utilizando mecanismos avanzados de concurrencia. Se analiza la arquitectura del sistema, los patrones de sincronización implementados, los resultados de las pruebas y se incluyen diagramas de UML que facilitan la comprensión del diseño.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================================
+\section{Introducción}
+% ============================================================================
+
+\subsection{Descripción General del Problema}
+
+El proyecto implementa un simulador del funcionamiento de un taller de reparación de coches. El taller recibe coches con diferentes tipos de incidencias (mecánica, eléctrica o carrocería), cada una con una prioridad diferente. Los coches deben pasar por cuatro fases secuenciales:
+
+\begin{enumerate}
+  \item \textbf{Fase 1: Documentación.} El coche espera una plaza libre en el taller y se prepara la documentación.
+  \item \textbf{Fase 2: Reparación.} Un mecánico libre realiza la reparación necesaria.
+  \item \textbf{Fase 3: Limpieza.} Se limpia el coche tras la reparación.
+  \item \textbf{Fase 4: Entrega.} Se realiza una revisión final antes de devolver el coche al cliente.
+\end{enumerate}
+
+\subsection{Clasificación de Coches por Categoría}
+
+El sistema clasifica los coches en tres categorías según su incidencia:
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|c|}
+    \hline
+    \textbf{Categoría} & \textbf{Incidencia} & \textbf{Prioridad} & \textbf{Tiempo/Fase} \\
+    \hline
+    A & Mecánica & Alta & 5\,s \\
+    B & Eléctrica & Media & 3\,s \\
+    C & Carrocería & Baja & 1\,s \\
+    \hline
+  \end{tabular}
+  \caption{Clasificación de categorías de coches}
+  \label{tab:categories}
+\end{table}
+
+Los tiempos indicados representan la duración base de cada fase, con una variación aleatoria de $\pm 2$ segundos.
+
+% ============================================================================
+\section{Arquitectura del Sistema}
+% ============================================================================
+
+\subsection{Componentes Principales}
+
+El sistema está compuesto por los siguientes módulos:
+
+\begin{itemize}
+  \item \textbf{types.go:} Define las estructuras de datos principales (Car, Garage, Event, IssueType).
+  \item \textbf{mutex.go:} Implementa los métodos de sincronización usando RWMutex.
+  \item \textbf{goroutines.go:} Define las funciones worker y las goroutines de cada fase.
+  \item \textbf{utility.go:} Contiene funciones auxiliares y de manejo de canales.
+  \item \textbf{main.go:} Punto de entrada con la función main().
+  \item \textbf{main\_test.go:} Suite de pruebas con los tres escenarios de evaluación.
+\end{itemize}
+
+\subsection{Estructuras de Datos}
+
+\subsubsection{Car}
+Representa un coche en el sistema:
+
+\begin{lstlisting}
+type Car struct {
+  id       int              // Identificador único
+  issue    IssueType        // Tipo de incidencia
+  duration time.Duration    // Tiempo por fase
+  curphase int              // Fase actual
+  start    time.Time        // Inicio de cronometraje
+}
+\end{lstlisting}
+
+\subsubsection{Garage}
+Estructura compartida que gestiona el estado global del taller:
+
+\begin{lstlisting}
+type Garage struct {
+  mu        sync.RWMutex        // Protección de zona crítica
+  cars      map[int]*Car        // Mapa de coches
+  freeSlots chan struct{}       // Canales de plazas libres
+  wg        sync.WaitGroup      // Sincronización global
+}
+\end{lstlisting}
+
+\subsubsection{Event}
+Estructura de eventos para logging:
+
+\begin{lstlisting}
+type Event struct {
+  elapsed time.Duration  // Tiempo que lleva el coche en el taller
+  car     int            // id del coche
+  phase   int            // fase en la que sucede el evento
+  status  string         // estado (entrando o saliendo)
+  issue   IssueType      // tipo de incidencia
+}
+\end{lstlisting}
+
+\subsection{Patrones de Sincronización}
+
+\subsubsection{RWMutex (Read-Write Mutex)}
+
+El acceso al mapa compartido de coches está protegido por un \texttt{RWMutex}:
+
+\begin{lstlisting}
+// Escritura (lock exclusivo)
+func (g *Garage) signInCar(c *Car) {
+  g.mu.Lock()
+  defer g.mu.Unlock()
+  g.cars[c.id] = c
+}
+
+// Lectura (lock compartido)
+func (g *Garage) updatePhase(id int, phase int) {
+  g.mu.Lock()
+  defer g.mu.Unlock()
+  if c, ok := g.cars[id]; ok {
+    c.curphase = phase
+  }
+}
+\end{lstlisting}
+
+\subsubsection{WaitGroup}
+
+Se utiliza para sincronizar el inicio y fin de todas las goroutines:
+
+\begin{lstlisting}
+// En main
+g.wg.Add(1)  // Cada coche incrementa el contador
+
+// En worker (fase de entrega)
+g.wg.Done()  // Cada coche termina
+\end{lstlisting}
+
+\subsubsection{Canales Prioritarios}
+
+Cada fase utiliza un array de 3 canales para gestionar prioridades:
+
+\begin{lstlisting}
+// Array de canales: [0] = alta, [1] = media, [2] = baja
+func sendCar(chans [3]chan *Car, c *Car) {
+  switch c.issue {
+  case MECH:
+    chans[0] <- c  // Prioridad alta
+  case ELECTRIC:
+    chans[1] <- c  // Prioridad media
+  case BODY:
+    chans[2] <- c  // Prioridad baja
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Select Prioritario para Recepción}
+
+Los workers utilizan un \texttt{select} anidado para recibir coches respetando prioridades:
+
+\begin{lstlisting}
+func getCar(chans [3]chan *Car, stop <-chan struct{}) *Car {
+  var c *Car
+
+  select {
+  case c = <-chans[0]:  // Intenta prioridad alta
+  default:
+    select {
+    case c = <-chans[1]:  // Intenta prioridad media
+    default:
+      select {  // Finalmente prioridad baja o espera
+      case c = <-chans[0]:
+      case c = <-chans[1]:
+      case c = <-chans[2]:
+      case <-stop:
+        return nil
+      }
+    }
+  }
+  return c
+}
+\end{lstlisting}
+
+% ============================================================================
+\section{Flujo de Ejecución}
+% ============================================================================
+
+\subsection{Diagrama de Secuencia - Ciclo Completo de un Coche}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=0.9]
+    % Actores
+    \draw (0, 0) node[anchor=east] {\textbf{Coche}};
+    \draw (3, 0) node[anchor=center] {\textbf{Fase 1}};
+    \draw (6, 0) node[anchor=center] {\textbf{Fase 2}};
+    \draw (9, 0) node[anchor=center] {\textbf{Fase 3}};
+    \draw (12, 0) node[anchor=center] {\textbf{Fase 4}};
+    
+    % Líneas de vida
+    \draw (0, -0.5) -- (0, -10);
+    \draw (3, -0.5) -- (3, -10);
+    \draw (6, -0.5) -- (6, -10);
+    \draw (9, -0.5) -- (9, -10);
+    \draw (12, -0.5) -- (12, -10);
+    
+    % Mensajes
+    \draw[->] (0, -1) -- (3, -1.5) node[midway, above] {Solicita plaza};
+    \draw[->] (3, -2) -- (6, -2.5) node[midway, above] {→ Reparación};
+    \draw[->] (6, -3) -- (9, -3.5) node[midway, above] {→ Limpieza};
+    \draw[->] (9, -4) -- (12, -4.5) node[midway, above] {→ Entrega};
+    \draw[->] (12, -5) -- (0, -5.5) node[midway, above] {Finalizado};
+  \end{tikzpicture}
+  \caption{Secuencia de fases en el ciclo de reparación}
+  \label{fig:sequence}
+\end{figure}
+
+\subsection{Modelo de Productor-Consumidor}
+
+La arquitectura del sistema sigue el modelo productor-consumidor entre fases:
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=3cm]
+    \node (prod) [draw, rectangle] {Productor};
+    \node (f1) [draw, rectangle, right of=prod] {Fase 1};
+    \node (f2) [draw, rectangle, right of=f1] {Fase 2};
+    \node (f3) [draw, rectangle, right of=f2] {Fase 3};
+    \node (f4) [draw, rectangle, right of=f3] {Fase 4};
+    
+    \draw[->] (prod) -- (f1) node[midway, above] {Coches};
+    \draw[->] (f1) -- (f2) node[midway, above] {Canales};
+    \draw[->] (f2) -- (f3) node[midway, above] {3 prios};
+    \draw[->] (f3) -- (f4) node[midway, above] {};
+  \end{tikzpicture}
+  \caption{Arquitectura productor-consumidor entre fases}
+  \label{fig:pipeline}
+\end{figure}
+
+% ============================================================================
+\section{Resultados de las Pruebas}
+% ============================================================================
+
+\subsection{Escenarios de Prueba}
+
+Se han ejecutado tres escenarios de prueba, cada uno realizado 5 veces para obtener un promedio representativo:
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \textbf{Escenario} & \textbf{Cat. A} & \textbf{Cat. B} & \textbf{Cat. C} & \textbf{Total} \\
+    \hline
+    1 & 10 & 10 & 10 & 30 \\
+    2 & 20 & 5 & 5 & 30 \\
+    3 & 5 & 5 & 20 & 30 \\
+    \hline
+  \end{tabular}
+  \caption{Distribución de coches por escenario}
+  \label{tab:scenarios}
+\end{table}
+
+\subsection{Métricas de Rendimiento}
+
+\subsubsection{Pruebas Estándar (test\_report.txt)}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{Escenario} & \textbf{Tiempo Medio} & \textbf{Tiempo Total} \\
+    \hline
+    1 (10A, 10B, 10C) & 57.21\,s & 286.06\,s \\
+    2 (20A, 5B, 5C) & 67.84\,s & 339.18\,s \\
+    3 (5A, 5B, 20C) & 44.13\,s & 220.66\,s \\
+    \hline
+  \end{tabular}
+  \caption{Resultados de pruebas estándar (5 simulaciones)}
+  \label{tab:test_results}
+\end{table}
+
+\subsubsection{Pruebas de Detección de Race Conditions (race\_report.txt)}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{Escenario} & \textbf{Tiempo Medio} & \textbf{Tiempo Total} \\
+    \hline
+    1 (10A, 10B, 10C) & 56.40\,s & 281.99\,s \\
+    2 (20A, 5B, 5C) & 67.00\,s & 334.97\,s \\
+    3 (5A, 5B, 20C) & 43.37\,s & 216.85\,s \\
+    \hline
+  \end{tabular}
+  \caption{Resultados de pruebas con detección de race conditions (5 simulaciones)}
+  \label{tab:race_results}
+\end{table}
+
+\subsection{Análisis Comparativo de Escenarios}
+
+\subsubsection{Escenario 1: Carga Balanceada (10A, 10B, 10C)}
+
+\begin{itemize}
+  \item \textbf{Tiempo promedio:} $\approx 57.2$ segundos
+  \item \textbf{Características:}
+  \begin{itemize}
+    \item Distribución equilibrada entre categorías
+    \item 10 coches de alta prioridad (5 s cada uno)
+    \item 10 coches de prioridad media (3 s cada uno)
+    \item 10 coches de baja prioridad (1 s cada uno)
+  \end{itemize}
+  \item \textbf{Análisis:}
+  \begin{itemize}
+    \item La carga es uniforme en todas las fases
+    \item Los workers pueden procesar coches sin acumulación excesiva
+    \item Buen uso de los recursos del sistema
+    \item Tiempo predictible y estable entre simulaciones
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Escenario 2: Alta Carga de Prioridad Alta (20A, 5B, 5C)}
+
+\begin{itemize}
+  \item \textbf{Tiempo promedio:} $\approx 67.84$ segundos
+  \item \textbf{Características:}
+  \begin{itemize}
+    \item 20 coches de alta prioridad (5 s cada uno)
+    \item 5 coches de prioridad media (3 s cada uno)
+    \item 5 coches de baja prioridad (1 s cada uno)
+  \end{itemize}
+  \item \textbf{Análisis:}
+  \begin{itemize}
+    \item \textbf{Mayor tiempo de ejecución} respecto a otros escenarios (+18.8\% vs. Escenario 1)
+    \item Los coches de alta prioridad (5 s cada uno) generan cuello de botella
+    \item Total de tiempo consumido: $20 \times 5\,\text{s} \times 4\,\text{fases} = 400$ segundos en operaciones
+    \item El paralelismo entre fases mitiga este tiempo (resultado: 67.84 s)
+    \item La prioridad garantiza que A se procese primero, pero requiere más recursos temporales
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Escenario 3: Alta Carga de Baja Prioridad (5A, 5B, 20C)}
+
+\begin{itemize}
+  \item \textbf{Tiempo promedio:} $\approx 44.13$ segundos
+  \item \textbf{Características:}
+  \begin{itemize}
+    \item 5 coches de alta prioridad (5 s cada uno)
+    \item 5 coches de prioridad media (3 s cada uno)
+    \item 20 coches de baja prioridad (1 s cada uno)
+  \end{itemize}
+  \item \textbf{Análisis:}
+  \begin{itemize}
+    \item \textbf{Menor tiempo de ejecución} (-22.9\% vs. Escenario 1)
+    \item Total de tiempo consumido: $(5 \times 5 + 5 \times 3 + 20 \times 1)\,\text{s} \times 4 = 340$ segundos
+    \item Aunque hay 20 coches, cada uno consume solo 1 s por fase
+    \item El paralelismo es más efectivo con coches de corta duración
+    \item Menor contención en los recursos compartidos
+  \end{itemize}
+\end{itemize}
+
+\subsection{Comparación de Rendimiento}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      ybar,
+      ylabel={Tiempo (segundos)},
+      xlabel={Escenario},
+      xtick={1,2,3},
+      xticklabels={Esc. 1 (10A,10B,10C), Esc. 2 (20A,5B,5C), Esc. 3 (5A,5B,20C)},
+      x tick label style={rotate=45, anchor=north east},
+      ymajorgrids=true,
+      grid style=dashed,
+      height=7cm,
+      width=12cm
+    ]
+      \addplot[fill=blue] coordinates {(1, 57.2) (2, 67.84) (3, 44.13)};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Comparación de tiempos de ejecución entre escenarios}
+  \label{fig:comparison}
+\end{figure}
+
+\subsection{Conclusiones sobre Rendimiento}
+
+\begin{enumerate}
+  \item \textbf{Duración total del coche:} Es el factor determinante. La suma de tiempos de cada coche $\times$ 4 fases da una cota inferior teórica.
+  
+  \item \textbf{Efectividad del paralelismo:} La ejecución en paralelo de múltiples fases reduce significativamente el tiempo total.
+  
+  \item \textbf{Impacto de la carga:}
+  \begin{itemize}
+    \item Escenario 2 (máxima carga de alta prioridad): \textbf{Más lento}
+    \item Escenario 3 (máxima carga de baja prioridad): \textbf{Más rápido}
+    \item Escenario 1 (carga equilibrada): \textbf{Intermedio}
+  \end{itemize}
+  
+  \item \textbf{Estabilidad:} Los tiempos entre simulaciones son consistentes (variación < 2\%), demostrando robustez del sistema.
+\end{enumerate}
+
+% ============================================================================
+\section{Cobertura de Código}
+% ============================================================================
+
+\subsection{Análisis de Cobertura}
+
+El informe de cobertura (cover\_report.txt) indica:
+
+\begin{itemize}
+  \item \textbf{goroutines.go:} Alta cobertura en paths principales, código no cubierto corresponde a handlers de main() (no se ejecutan en tests)
+  \item \textbf{mutex.go:} 100\% de cobertura en métodos de sincronización
+  \item \textbf{utility.go:} Buena cobertura general, funciones auxiliares utilizadas
+  \item \textbf{types.go:} Definiciones de estructuras (sin lógica a cubrir)
+\end{itemize}
+
+\subsection{Race Conditions}
+
+Las pruebas con detección de race conditions (`go test -race`) pasaron exitosamente sin reportar conflictos de concurrencia, validando que:
+
+\begin{itemize}
+  \item El uso de mutexes es correcto
+  \item Los canales se utilizan adecuadamente
+  \item No hay accesos simultáneos no sincronizados a datos compartidos
+\end{itemize}
+
+% ============================================================================
+\section{Diagramas UML}
+% ============================================================================
+
+\subsection{Diagrama de Clases}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1]
+    % Car
+    \draw (0, 8) rectangle (3, 10.5);
+    \draw (0, 10.2) -- (3, 10.2);
+    \node at (1.5, 10.35) [anchor=center] {\textbf{Car}};
+    \draw (0, 10.05) -- (3, 10.05);
+    \node at (0.2, 9.8) [anchor=west] {- id: int};
+    \node at (0.2, 9.5) [anchor=west] {- issue: IssueType};
+    \node at (0.2, 9.2) [anchor=west] {- duration: Duration};
+    \node at (0.2, 8.9) [anchor=west] {- curphase: int};
+    \node at (0.2, 8.6) [anchor=west] {- start: Time};
+    \node at (0.2, 8.3) [anchor=west] {+ GetPhase()};
+    
+    % Garage
+    \draw (4.5, 7) rectangle (8, 10.5);
+    \draw (4.5, 10.2) -- (8, 10.2);
+    \node at (6.25, 10.35) [anchor=center] {\textbf{Garage}};
+    \draw (4.5, 10.05) -- (8, 10.05);
+    \node at (4.7, 9.8) [anchor=west] {- mu: RWMutex};
+    \node at (4.7, 9.5) [anchor=west] {- cars: map[int]*Car};
+    \node at (4.7, 9.2) [anchor=west] {- freeSlots: chan};
+    \node at (4.7, 8.9) [anchor=west] {- wg: WaitGroup};
+    \node at (4.7, 8.6) [anchor=west] {+ signInCar()};
+    \node at (4.7, 8.3) [anchor=west] {+ updatePhase()};
+    \node at (4.7, 8.0) [anchor=west] {+ delCar()};
+    
+    % Event
+    \draw (9, 8) rectangle (12, 10.5);
+    \draw (9, 10.2) -- (12, 10.2);
+    \node at (10.5, 10.35) [anchor=center] {\textbf{Event}};
+    \draw (9, 10.05) -- (12, 10.05);
+    \node at (9.2, 9.8) [anchor=west] {- elapsed: Duration};
+    \node at (9.2, 9.5) [anchor=west] {- car: int};
+    \node at (9.2, 9.2) [anchor=west] {- phase: int};
+    \node at (9.2, 8.9) [anchor=west] {- status: string};
+    \node at (9.2, 8.6) [anchor=west] {- issue: IssueType};
+    
+    % Relaciones
+    \draw[->] (3, 9) -- (4.5, 8.5);
+  \end{tikzpicture}
+  \caption{Diagrama UML de clases principales}
+  \label{fig:uml_classes}
+\end{figure}
+
+\subsection{Diagrama de Actividad}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=0.8]
+    % Inicio
+    \node (start) [draw, circle, fill=black] at (0, 0) {};
+    
+    % Crear Garage
+    \node (garage) [draw, rectangle] at (0, -2) {Inicializar Garage};
+    
+    % Lanzar workers
+    \node (workers) [draw, rectangle] at (0, -4) {Lanzar Workers Fases};
+    
+    % Generar coches
+    \node (cars) [draw, rectangle] at (0, -6) {Generar Coches};
+    
+    % Distribuir coches
+    \node (dist) [draw, rectangle] at (0, -8) {Distribuir en Fase 1};
+    
+    % Esperar finalización
+    \node (wait) [draw, rectangle] at (0, -10) {WaitGroup.Wait()};
+    
+    % Cerrar canales
+    \node (close) [draw, rectangle] at (0, -12) {Cerrar Canales};
+    
+    % Fin
+    \node (end) [draw, circle, fill=black] at (0, -14) {};
+    
+    % Flechas
+    \draw[->] (start) -- (garage);
+    \draw[->] (garage) -- (workers);
+    \draw[->] (workers) -- (cars);
+    \draw[->] (cars) -- (dist);
+    \draw[->] (dist) -- (wait);
+    \draw[->] (wait) -- (close);
+    \draw[->] (close) -- (end);
+  \end{tikzpicture}
+  \caption{Diagrama de actividad del flujo principal}
+  \label{fig:uml_activity}
+\end{figure}
+
+\subsection{Diagrama de Estado de un Coche}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1]
+    % Estados
+    \node (idle) [draw, ellipse, minimum width=2cm] at (0, 0) {Esperando};
+    \node (doc) [draw, ellipse, minimum width=2cm] at (3, 2) {Documentación};
+    \node (repair) [draw, ellipse, minimum width=2cm] at (6, 2) {Reparación};
+    \node (clean) [draw, ellipse, minimum width=2cm] at (9, 2) {Limpieza};
+    \node (deliv) [draw, ellipse, minimum width=2cm] at (12, 2) {Entrega};
+    \node (done) [draw, ellipse, minimum width=2cm] at (15, 0) {Completado};
+    
+    % Transiciones
+    \draw[->] (idle) -- (doc) node[midway, above] {Plaza disponible};
+    \draw[->] (doc) -- (repair) node[midway, above] {Documentación OK};
+    \draw[->] (repair) -- (clean) node[midway, above] {Reparación OK};
+    \draw[->] (clean) -- (deliv) node[midway, above] {Limpieza OK};
+    \draw[->] (deliv) -- (done) node[midway, above] {Revisión OK};
+  \end{tikzpicture}
+  \caption{Diagrama de estados de un coche}
+  \label{fig:uml_state}
+\end{figure}
+
+% ============================================================================
+\section{Implementación de Sincronización}
+% ============================================================================
+
+\subsection{Estrategia: Canales + Mutexes}
+
+La solución utiliza dos mecanismos complementarios:
+
+\begin{enumerate}
+  \item \textbf{Canales:} Para comunicación entre fases (colas de prioridad)
+  \item \textbf{Mutexes:} Para proteger el estado compartido (mapa de coches)
+\end{enumerate}
+
+\subsection{Protección de la Zona Crítica}
+
+El mapa de coches es la única zona crítica, accedida por:
+
+\begin{itemize}
+  \item \textbf{signInCar():} Escritura cuando entra el coche (una sola goroutine)
+  \item \textbf{updatePhase():} Actualización de fase (múltiples goroutines, workers)
+  \item \textbf{delCar():} Eliminación al terminar (workers de fase 4)
+\end{itemize}
+
+Usar RWMutex permite lecturas concurrentes aunque en este caso todas son escrituras.
+
+\subsection{Ventajas del Diseño}
+
+\begin{itemize}
+  \item \textbf{No hay deadlock:} Los locks se liberan inmediatamente con defer
+  \item \textbf{No hay busy-waiting:} Los workers duermen en select sobre canales
+  \item \textbf{Priorización correcta:} El select anidado garantiza que A $>$ B $>$ C
+  \item \textbf{Escalabilidad:} Número de workers configurable por fase
+\end{itemize}
+
+% ============================================================================
+\section{Optimizaciones y Decisiones de Diseño}
+% ============================================================================
+
+\subsection{Uso de Canales de Plazas (freeSlots)}
+
+En lugar de usar un semáforo tradicional, se utilizan tokens en un canal buffered:
+
+\begin{lstlisting}
+// Esperar plaza
+<-g.freeSlots
+
+// Liberar plaza
+g.freeSlots <- struct{}{}
+\end{lstlisting}
+
+\textbf{Ventaja:} Más idiómatico en Go, integrable con select.
+
+\subsection{Array de Canales para Prioridades}
+
+Cada fase mantiene 3 canales:
+
+\begin{lstlisting}
+type PhaseChansPriority [3]chan *Car
+// [0] = alta (MECH)
+// [1] = media (ELECTRIC)
+// [2] = baja (BODY)
+\end{lstlisting}
+
+\textbf{Ventaja:} Separación clara de prioridades, select anidado garantiza precedencia.
+
+\subsection{WaitGroup para Sincronización Global}
+
+Cada coche incrementa al entrar y decrementa al salir de fase 4:
+
+\begin{lstlisting}
+g.wg.Add(1)   // Coche entra
+g.wg.Done()   // Coche sale de fase 4
+g.wg.Wait()   // Esperar a todos
+\end{lstlisting}
+
+\textbf{Ventaja:} Garantiza que el programa espere hasta que TODOS los coches terminen.
+
+% ============================================================================
+\section{Conclusiones}
+% ============================================================================
+
+\subsection{Eficacia del Sistema}
+
+El sistema implementa exitosamente un simulador de taller con:
+
+\begin{itemize}
+  \item \textbf{Sincronización correcta:} Sin race conditions (validado con `go test -race`)
+  \item \textbf{Priorización funcional:} Los coches de alta prioridad se atienden primero
+  \item \textbf{Paralelismo efectivo:} Las 4 fases se ejecutan concurrentemente
+  \item \textbf{Escalabilidad:} Número de workers configurables
+\end{itemize}
+
+\subsection{Análisis de Rendimiento}
+
+Los resultados muestran que:
+
+\begin{enumerate}
+  \item \textbf{Escenario 1 (Equilibrado):} Tiempo promedio de 57.2 s
+  \item \textbf{Escenario 2 (Alta Prioridad):} Tiempo promedio de 67.84 s (+18.8\%)
+  \item \textbf{Escenario 3 (Baja Prioridad):} Tiempo promedio de 44.13 s (-22.9\%)
+\end{enumerate}
+
+La duración total está dominada por la carga de trabajo (suma de tiempos de coches), no por la sincronización.
+
+\subsection{Recomendaciones Futuras}
+
+\begin{itemize}
+  \item Implementar balanceo dinámico de workers según carga
+  \item Agregar métricas de tiempo de espera por prioridad
+  \item Simular fallos y recuperación de mecánicos
+  \item Permitir que coches salten entre categorías de reparación
+\end{itemize}
+
+\appendix
+
+\section{Repositorio}
+
+El código fuente completo está disponible en:
+\begin{center}
+  \texttt{https://github.com/alacoste96/Practica-3-SDIS}
+\end{center}
+
+\section{Estructura del Proyecto}
+
+\begin{verbatim}
+Practica-3-SDIS/
+├── Doc/
+│   ├── cover_report.txt
+│   ├── race_report.txt
+│   └── test_report.txt
+├── go.mod
+├── README.md
+└── src/
+    ├── goroutines.go
+    ├── main.go
+    ├── main_test.go
+    ├── mutex.go
+    ├── types.go
+    └── utility.go
+\end{verbatim}
+
+\end{document}
