@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// ===================== Utilidades =====================
+
+// funcion que inicializa un garage
 func newGarage(numSlots int) *Garage {
 	g := &Garage{
 		cars:      make(map[int]*Car),
@@ -16,6 +19,7 @@ func newGarage(numSlots int) *Garage {
 	return g
 }
 
+// libera las goroutines lanzadas enviando estructuras vacías a los canales de stop
 func freeThreats(docChan, repChan, cleanChan, deliverChan chan struct{}) {
 	docChan <- struct{}{}
 	repChan <- struct{}{}
@@ -27,6 +31,7 @@ func freeThreats(docChan, repChan, cleanChan, deliverChan chan struct{}) {
 	close(deliverChan)
 }
 
+// saca un coche de un mapa de coches según la prioridad
 func getCarFromQ(cars map[int]*Car) *Car {
 	var chosen *Car
 
@@ -54,6 +59,7 @@ func getCarFromQ(cars map[int]*Car) *Car {
 	return nil
 }
 
+// genera ncars coches en un mapa con prios aleatorias
 func genCars(ncars int) map[int]*Car {
 	var i int
 
@@ -64,8 +70,7 @@ func genCars(ncars int) map[int]*Car {
 	return cars
 }
 
-// ===================== Utilidades =====================
-
+// saca un número float aleatorio entre 0 y 2 con 1 decimal
 func randDecimal() float64 {
 	n := rand.Intn(21) // 0..20
 	return float64(n) / 10.0
@@ -144,6 +149,7 @@ func initPhaseChans() [3]chan *Car {
 	return chans
 }
 
+// cierra un slice de 3 canales
 func closeChans(chans [3]chan *Car) {
 	for i := range chans {
 		close(chans[i])

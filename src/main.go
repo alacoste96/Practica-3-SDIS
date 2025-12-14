@@ -34,7 +34,7 @@ func main() {
 	stopDeliver := make(chan struct{})
 
 	g = newGarage(numSlots)
-	auxcars := genCars(numCars)
+	carspool := genCars(numCars)
 
 	fmt.Printf("%-8s %-8s %-10s %-6s %-8s\n",
 		"Tiempo[s]", "Coche[id]", "Incidencia", "Fase", "Estado")
@@ -61,7 +61,7 @@ func main() {
 		// Esperar a tener una plaza libre
 		<-g.freeSlots
 
-		c := getCarFromQ(auxcars)
+		c := getCarFromQ(carspool)
 		c.start = time.Now()
 		// Registrar el Car en el mapa global
 		g.signInCar(c)
