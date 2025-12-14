@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper,oneside]{article}
-\usepackage[utf-8]{inputenc}
+\usepackage{fontspec}
+\setmonofont{DejaVu Sans Mono}
 \usepackage[spanish]{babel}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -17,6 +18,7 @@
 
 \geometry{margin=2.5cm}
 \pagestyle{fancy}
+\setlength{\headheight}{15pt}
 \fancyhf{}
 \fancyhead[L]{Práctica 3: Concurrencia en Go}
 \fancyhead[R]{Sistemas Distribuidos}
@@ -240,52 +242,9 @@ func getCar(chans [3]chan *Car, stop <-chan struct{}) *Car {
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[scale=0.9]
-    % Actores
-    \draw (0, 0) node[anchor=east] {\textbf{Coche}};
-    \draw (3, 0) node[anchor=center] {\textbf{Fase 1}};
-    \draw (6, 0) node[anchor=center] {\textbf{Fase 2}};
-    \draw (9, 0) node[anchor=center] {\textbf{Fase 3}};
-    \draw (12, 0) node[anchor=center] {\textbf{Fase 4}};
-    
-    % Líneas de vida
-    \draw (0, -0.5) -- (0, -10);
-    \draw (3, -0.5) -- (3, -10);
-    \draw (6, -0.5) -- (6, -10);
-    \draw (9, -0.5) -- (9, -10);
-    \draw (12, -0.5) -- (12, -10);
-    
-    % Mensajes
-    \draw[->] (0, -1) -- (3, -1.5) node[midway, above] {Solicita plaza};
-    \draw[->] (3, -2) -- (6, -2.5) node[midway, above] {→ Reparación};
-    \draw[->] (6, -3) -- (9, -3.5) node[midway, above] {→ Limpieza};
-    \draw[->] (9, -4) -- (12, -4.5) node[midway, above] {→ Entrega};
-    \draw[->] (12, -5) -- (0, -5.5) node[midway, above] {Finalizado};
-  \end{tikzpicture}
-  \caption{Secuencia de fases en el ciclo de reparación}
+  \includegraphics[width=0.8\textwidth]{../images/secuencia.png}
+  \caption{Diagrama de Secuencia del viaje de un coche}
   \label{fig:sequence}
-\end{figure}
-
-\subsection{Modelo de Productor-Consumidor}
-
-La arquitectura del sistema sigue el modelo productor-consumidor entre fases:
-
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[node distance=3cm]
-    \node (prod) [draw, rectangle] {Productor};
-    \node (f1) [draw, rectangle, right of=prod] {Fase 1};
-    \node (f2) [draw, rectangle, right of=f1] {Fase 2};
-    \node (f3) [draw, rectangle, right of=f2] {Fase 3};
-    \node (f4) [draw, rectangle, right of=f3] {Fase 4};
-    
-    \draw[->] (prod) -- (f1) node[midway, above] {Coches};
-    \draw[->] (f1) -- (f2) node[midway, above] {Canales};
-    \draw[->] (f2) -- (f3) node[midway, above] {3 prios};
-    \draw[->] (f3) -- (f4) node[midway, above] {};
-  \end{tikzpicture}
-  \caption{Arquitectura productor-consumidor entre fases}
-  \label{fig:pipeline}
 \end{figure}
 
 % ============================================================================
@@ -413,22 +372,14 @@ Se han ejecutado tres escenarios de prueba, cada uno realizado 5 veces para obte
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}
-    \begin{axis}[
-      ybar,
-      ylabel={Tiempo (segundos)},
-      xlabel={Escenario},
-      xtick={1,2,3},
-      xticklabels={Esc. 1 (10A,10B,10C), Esc. 2 (20A,5B,5C), Esc. 3 (5A,5B,20C)},
-      x tick label style={rotate=45, anchor=north east},
-      ymajorgrids=true,
-      grid style=dashed,
-      height=7cm,
-      width=12cm
-    ]
-      \addplot[fill=blue] coordinates {(1, 57.2) (2, 67.84) (3, 44.13)};
-    \end{axis}
-  \end{tikzpicture}
+  % AQUÍ INSERTAR: grafico_comparacion.png (puedes crear una imagen simple)
+  \begin{tabular}{lc}
+    \textbf{Escenario} & \textbf{Tiempo (s)} \\
+    \hline
+    Escenario 1 (10A,10B,10C) & 57.21 \\
+    Escenario 2 (20A,5B,5C) & 67.84 \\
+    Escenario 3 (5A,5B,20C) & 44.13 \\
+  \end{tabular}
   \caption{Comparación de tiempos de ejecución entre escenarios}
   \label{fig:comparison}
 \end{figure}
@@ -483,46 +434,7 @@ Las pruebas con detección de race conditions (`go test -race`) pasaron exitosam
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[scale=1]
-    % Car
-    \draw (0, 8) rectangle (3, 10.5);
-    \draw (0, 10.2) -- (3, 10.2);
-    \node at (1.5, 10.35) [anchor=center] {\textbf{Car}};
-    \draw (0, 10.05) -- (3, 10.05);
-    \node at (0.2, 9.8) [anchor=west] {- id: int};
-    \node at (0.2, 9.5) [anchor=west] {- issue: IssueType};
-    \node at (0.2, 9.2) [anchor=west] {- duration: Duration};
-    \node at (0.2, 8.9) [anchor=west] {- curphase: int};
-    \node at (0.2, 8.6) [anchor=west] {- start: Time};
-    \node at (0.2, 8.3) [anchor=west] {+ GetPhase()};
-    
-    % Garage
-    \draw (4.5, 7) rectangle (8, 10.5);
-    \draw (4.5, 10.2) -- (8, 10.2);
-    \node at (6.25, 10.35) [anchor=center] {\textbf{Garage}};
-    \draw (4.5, 10.05) -- (8, 10.05);
-    \node at (4.7, 9.8) [anchor=west] {- mu: RWMutex};
-    \node at (4.7, 9.5) [anchor=west] {- cars: map[int]*Car};
-    \node at (4.7, 9.2) [anchor=west] {- freeSlots: chan};
-    \node at (4.7, 8.9) [anchor=west] {- wg: WaitGroup};
-    \node at (4.7, 8.6) [anchor=west] {+ signInCar()};
-    \node at (4.7, 8.3) [anchor=west] {+ updatePhase()};
-    \node at (4.7, 8.0) [anchor=west] {+ delCar()};
-    
-    % Event
-    \draw (9, 8) rectangle (12, 10.5);
-    \draw (9, 10.2) -- (12, 10.2);
-    \node at (10.5, 10.35) [anchor=center] {\textbf{Event}};
-    \draw (9, 10.05) -- (12, 10.05);
-    \node at (9.2, 9.8) [anchor=west] {- elapsed: Duration};
-    \node at (9.2, 9.5) [anchor=west] {- car: int};
-    \node at (9.2, 9.2) [anchor=west] {- phase: int};
-    \node at (9.2, 8.9) [anchor=west] {- status: string};
-    \node at (9.2, 8.6) [anchor=west] {- issue: IssueType};
-    
-    % Relaciones
-    \draw[->] (3, 9) -- (4.5, 8.5);
-  \end{tikzpicture}
+  \includegraphics[width=0.8\textwidth]{../images/clases.png}
   \caption{Diagrama UML de clases principales}
   \label{fig:uml_classes}
 \end{figure}
@@ -531,40 +443,7 @@ Las pruebas con detección de race conditions (`go test -race`) pasaron exitosam
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[scale=0.8]
-    % Inicio
-    \node (start) [draw, circle, fill=black] at (0, 0) {};
-    
-    % Crear Garage
-    \node (garage) [draw, rectangle] at (0, -2) {Inicializar Garage};
-    
-    % Lanzar workers
-    \node (workers) [draw, rectangle] at (0, -4) {Lanzar Workers Fases};
-    
-    % Generar coches
-    \node (cars) [draw, rectangle] at (0, -6) {Generar Coches};
-    
-    % Distribuir coches
-    \node (dist) [draw, rectangle] at (0, -8) {Distribuir en Fase 1};
-    
-    % Esperar finalización
-    \node (wait) [draw, rectangle] at (0, -10) {WaitGroup.Wait()};
-    
-    % Cerrar canales
-    \node (close) [draw, rectangle] at (0, -12) {Cerrar Canales};
-    
-    % Fin
-    \node (end) [draw, circle, fill=black] at (0, -14) {};
-    
-    % Flechas
-    \draw[->] (start) -- (garage);
-    \draw[->] (garage) -- (workers);
-    \draw[->] (workers) -- (cars);
-    \draw[->] (cars) -- (dist);
-    \draw[->] (dist) -- (wait);
-    \draw[->] (wait) -- (close);
-    \draw[->] (close) -- (end);
-  \end{tikzpicture}
+  \includegraphics[width=0.8\textwidth]{../images/flujo.png}
   \caption{Diagrama de actividad del flujo principal}
   \label{fig:uml_activity}
 \end{figure}
@@ -573,22 +452,7 @@ Las pruebas con detección de race conditions (`go test -race`) pasaron exitosam
 
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[scale=1]
-    % Estados
-    \node (idle) [draw, ellipse, minimum width=2cm] at (0, 0) {Esperando};
-    \node (doc) [draw, ellipse, minimum width=2cm] at (3, 2) {Documentación};
-    \node (repair) [draw, ellipse, minimum width=2cm] at (6, 2) {Reparación};
-    \node (clean) [draw, ellipse, minimum width=2cm] at (9, 2) {Limpieza};
-    \node (deliv) [draw, ellipse, minimum width=2cm] at (12, 2) {Entrega};
-    \node (done) [draw, ellipse, minimum width=2cm] at (15, 0) {Completado};
-    
-    % Transiciones
-    \draw[->] (idle) -- (doc) node[midway, above] {Plaza disponible};
-    \draw[->] (doc) -- (repair) node[midway, above] {Documentación OK};
-    \draw[->] (repair) -- (clean) node[midway, above] {Reparación OK};
-    \draw[->] (clean) -- (deliv) node[midway, above] {Limpieza OK};
-    \draw[->] (deliv) -- (done) node[midway, above] {Revisión OK};
-  \end{tikzpicture}
+  \includegraphics[width=0.8\textwidth]{../images/estados.png}
   \caption{Diagrama de estados de un coche}
   \label{fig:uml_state}
 \end{figure}
@@ -718,14 +582,27 @@ El código fuente completo está disponible en:
 \section{Estructura del Proyecto}
 
 \begin{verbatim}
-Practica-3-SDIS/
-├── Doc/
-│   ├── cover_report.txt
-│   ├── race_report.txt
-│   └── test_report.txt
+Practica-3-SDIS
+├── Doc
+│   ├── Practica_3_alacoste_SSOO_dist.pdf
+│   └── Practica_3_alacoste_SSOO_dist.tex
+├── drawio
+│   ├── diagrama_actividad.drawio
+│   ├── diagrama_clases.drawio
+│   ├── diagrama_estados.drawio
+│   └── diagrama_secuencia.drawio
 ├── go.mod
+├── images
+│   ├── clases.png
+│   ├── estados.png
+│   ├── flujo.png
+│   └── secuencia.png
+├── log
+│   ├── cover_report.txt
+│   ├── race_report.txt
+│   └── test_report.txt
 ├── README.md
-└── src/
+└── src
     ├── goroutines.go
     ├── main.go
     ├── main_test.go
