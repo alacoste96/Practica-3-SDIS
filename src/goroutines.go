@@ -21,6 +21,7 @@ func worker(g *Garage, entrys [3]chan *Car, exits [3]chan *Car, events chan<- Ev
 		time.Sleep(c.duration)
 		genEvent(events, c, "sale")
 		if phase == DELIVERYPHASE {
+			time.Sleep(c.duration)
 			g.delCar(c.id)
 			// Liberar una plaza (podrá entrar otro Car en fase 1)
 			g.freeSlots <- struct{}{}
